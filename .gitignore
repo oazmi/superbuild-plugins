@@ -1,11 +1,19 @@
-# Deno
-# https://deno.com/
+# distribution builds and documentation builds
+/dist/
+/docs/
+/npm/
+/temp/
+/package.json
+/tsconfig.json
 
-# Cache directory (when using project-local DENO_DIR)
-# https://docs.deno.com/runtime/fundamentals/setup/#deno_dir
+# cache files and directories
 .deno/
+node_modules/
 
-# Coverage reports
-# https://docs.deno.com/runtime/reference/cli/coverage/
-coverage/
-*.lcov
+# version lock files
+deno.lock
+deno.d.ts
+package-lock.json
+
+# test artifacts
+/test/**/dist/

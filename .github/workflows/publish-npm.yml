@@ -1,0 +1,31 @@
+name: publish-to-npm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-to-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # this token supposedly enables provenance with NPM.
+    steps:
+      - name: clone npm repo branch
+        uses: actions/checkout@v7
+        with:
+          ref: "npm"
+
+      - name: setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+          registry-url: "https://registry.npmjs.org"
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
