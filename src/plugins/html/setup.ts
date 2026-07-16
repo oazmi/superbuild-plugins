@@ -1,30 +1,53 @@
 /** @module */
 
-import type { EsbuildPartialMessage, ImportedEntity, ImportEntity, OnTransformOptions, SuperPluginBuild, SuperPluginSetup } from "../../deps.ts"
-import { contentsToString, isNull, isRecord } from "../../deps.ts"
+import type { EsbuildPartialMessage, ImportedEntity, ImportEntity, OnEmitOptions, OnTransformOptions, Require, SuperPluginBuild, SuperPluginSetup } from "../../deps.ts"
+import { contentsToString, isNull, isRecord, promise_all } from "../../deps.ts"
 import { htmlParse, htmlRender, htmlWalk, type HtmlNode } from "./deps.ts"
 import { scriptLinkHandlerCallback, scriptLinkHandlerFilter } from "./node_handlers/script_link.ts"
 import type { HtmlDependencyCallback, HtmlDependencyEmitData, HtmlDependencyFilter, HtmlNodeRef, HtmlNodeReplacementContentTask } from "./typedefs.ts"
 
 
-const config = {
-	transformFilter: {
-		filter: /.*/,
-		loader: "html",
-		namespace: undefined,
-	} satisfies OnTransformOptions
-}
-
-interface NodeHandlers {
+export interface NodeHandlers {
 	filter: HtmlDependencyFilter
 	callback: HtmlDependencyCallback
 }
 
-export const htmlPluginSetup: SuperPluginSetup = async (build: SuperPluginBuild) => {
-	const nodeHandlers: NodeHandlers[] = []
-	nodeHandlers.push({ filter: scriptLinkHandlerFilter, callback: scriptLinkHandlerCallback })
+/** setup configuration options for the {@link htmlPluginSetup}.
+ *
+ * @defaultValue {@link defaultHtmlPluginSetupConfig}.
+*/
+export interface HtmlPluginSetupConfig {
+	/** specify which loaded files/resoruces will need to be intercepted by the html plugin.
+	 *
+	 * @defaultValue `{ filter: new RegExp(".*"), loader: "html", namespace: undefined }`
+	*/
+	transformFilter?: Require<OnTransformOptions, "loader">
 
-	build.onTransform(config.transformFilter, async (args) => {
+	/** specify your node handlers that will extract the linked/inlined resources that need to be bundled along with the html.
+	 *
+	 * @defaultValue all filters under [`./node_handlers/`](./node_handlers/) are included.
+	*/
+	nodeHandlers?: Array<NodeHandlers>
+}
+
+/** the default configuration for {@link htmlPluginSetup}. */
+export const defaultHtmlPluginSetupConfig: Required<HtmlPluginSetupConfig> = {
+	transformFilter: { filter: /.*/, loader: "html", namespace: undefined },
+	nodeHandlers: [
+		{ filter: scriptLinkHandlerFilter, callback: scriptLinkHandlerCallback },
+	],
+}
+
+export const htmlPluginSetup = (config?: HtmlPluginSetupConfig): SuperPluginSetup => {
+	return (build: SuperPluginBuild) => htmlPluginSetupBase(build, config)
+}
+
+const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupConfig): ReturnType<SuperPluginSetup> => {
+	const
+		{ transformFilter, nodeHandlers } = { ...defaultHtmlPluginSetupConfig, ...config },
+		emitFilter: OnEmitOptions = { filter: /.*/, inputs: [transformFilter] }
+
+	build.onTransform(transformFilter, async (args) => {
 		const
 			{ path: importer, namespace, resolveDir, pluginData } = args,
 			contents = contentsToString(args.contents),
@@ -77,13 +100,7 @@ export const htmlPluginSetup: SuperPluginSetup = async (build: SuperPluginBuild)
 		}
 	})
 
-	build.onEmit({
-		filter: /.*/,
-		inputs: [{
-			filter: /.*/,
-			loader: "html",
-		}],
-	}, async (args) => {
+	build.onEmit(emitFilter, async (args) => {
 		const
 			number_of_sources = args.inputs.length,
 			path = args.outputPath
@@ -96,7 +113,8 @@ export const htmlPluginSetup: SuperPluginSetup = async (build: SuperPluginBuild)
 		const
 			errors: EsbuildPartialMessage[] = [],
 			{ htmlDocument, replacementTaskList } = args.inputs[0].emitData as HtmlDependencyEmitData
-		for (const imported_entity of args.imports) {
+
+		await promise_all(args.imports.map(async (imported_entity): Promise<void> => {
 			const
 				{ key: node_ref, outputPath, external, write, with: with_attrs } = imported_entity as ImportedEntity<HtmlNodeRef>,
 				reinsertion_task = replacementTaskList.at(node_ref)
@@ -105,13 +123,14 @@ export const htmlPluginSetup: SuperPluginSetup = async (build: SuperPluginBuild)
 					text: `[htmlPlugin]: failed to find the "insertImport" function associated with the following html node number: "${node_ref}".`,
 					location: { file: path },
 				})
-				continue
+				return
 			}
 			const { htmlNode: node, replaceContent } = replacementTaskList[node_ref]
 			// TODO: resolve the `outputPath` as relative path if not external.
 			// re-inserting the new link/reference back into the html node.
-			replaceContent(node, outputPath, { external, write, with: with_attrs })
-		}
+			await replaceContent(node, outputPath, { external, write, with: with_attrs })
+		}))
+
 		const rendered_html = await htmlRender(htmlDocument)
 		return { contents: rendered_html, errors }
 	})

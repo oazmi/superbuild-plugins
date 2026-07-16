@@ -1,6 +1,6 @@
 /** @module */
 
-import type { ImportedEntity, ImportEntity, MaybePromiseOrNull } from "../../deps.ts"
+import type { ImportedEntity, ImportEntity, MaybePromise, MaybePromiseOrNull } from "../../deps.ts"
 import type { HTML_NODE_TYPE, HtmlNode, StrictOmit } from "./deps.ts"
 
 
@@ -22,7 +22,7 @@ export type ReplaceContentFn = (
 	node: HtmlNode,
 	output_path: string,
 	config: Pick<ImportedEntity, "external" | "with" | "write">,
-) => void
+) => MaybePromise<void>
 
 /** describes a task for replacing the contents of a node with the updated resource output path reference. */
 export interface HtmlNodeReplacementContentTask {
