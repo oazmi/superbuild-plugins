@@ -12,8 +12,8 @@ export { promiseOutside, promiseTimeout } from "@oazmi/kitchensink/promiseman"
 export { escapeLiteralStringForRegex } from "@oazmi/kitchensink/stringman"
 export { isArray, isFunction, isNull, isRecord, isString } from "@oazmi/kitchensink/struct"
 export type { AutoSuggestOrString, MaybePromise, MaybePromiseLike, Optional, Require } from "@oazmi/kitchensink/typedefs"
-export type { SuperPluginBuild } from "@oazmi/superbuild"
-export { parse as htmlParse, transform as htmlTransform, walk as htmlWalk, type Node as HtmlNode } from "ultrahtml"
+export type { ImportedEntity, ImportEntity, OnEmitResult, OnTransformOptions, OnTransformResult, SuperPlugin, SuperPluginBuild, SuperPluginSetup } from "@oazmi/superbuild"
+export type { EsbuildPartialMessage } from "@oazmi/superbuild/esbuild/strongtypes"
 
 /** flags used for minifying (or eliminating) debugging logs and asserts, when an intelligent bundler, such as `esbuild`, is used. */
 export const enum DEBUG {
@@ -47,6 +47,18 @@ export const ensureRelativeDotSlash = (str: string): string => {
 export const
 	textEncoder = new TextEncoder(),
 	textDecoder = new TextDecoder()
+
+export const contentsToUint8Array = (contents: string | Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> => {
+	return isString(contents)
+		? textEncoder.encode(contents)
+		: contents
+}
+
+export const contentsToString = (contents: string | Uint8Array<ArrayBuffer>): string => {
+	return isString(contents)
+		? contents
+		: textDecoder.decode(contents)
+}
 
 /** represents either a regular value `T`, or nullable value (`null | undefined`), or a `Promise` thereof. */
 export type MaybePromiseOrNull<T> = MaybePromise<T | null | undefined>

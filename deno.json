@@ -22,7 +22,7 @@
 		"./typedefs": "./src/typedefs.ts"
 	},
 	"imports": {
-		"@oazmi/superbuild": "jsr:@oazmi/superbuild@0.1.1",
+		"@oazmi/superbuild": "jsr:@oazmi/superbuild@0.1.2",
 		"@oazmi/kitchensink": "jsr:@oazmi/kitchensink@0.10.1",
 		"@oazmi/esbuild-types": "jsr:@oazmi/esbuild-types@0.28.0",
 		"ultrahtml": "npm:ultrahtml@^1.7.0"
@@ -54,7 +54,7 @@
 	},
 	"packageJson": {
 		"dependencies": {
-			"@oazmi/superbuild": "0.1.1",
+			"@oazmi/superbuild": "0.1.2",
 			"@oazmi/kitchensink": "0.10.1",
 			"@oazmi/esbuild-types": "0.28.0",
 			"ultrahtml": "^1.7.0"
