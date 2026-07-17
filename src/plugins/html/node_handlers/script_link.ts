@@ -15,7 +15,7 @@ export const scriptLinkHandlerCallback: HtmlDependencyCallback = (args: HtmlDepe
 	}
 }
 
-const replaceContent: HtmlDependency["replaceContent"] = (node, output_path, config) => {
+const replaceContent: HtmlDependency["replaceContent"] = (ctx, node, output_path, config) => {
 	node.attributes["src"] = output_path
 }
 

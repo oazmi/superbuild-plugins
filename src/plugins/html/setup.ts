@@ -5,9 +5,10 @@
 
 import type { EsbuildPartialMessage, ImportedEntity, ImportEntity, OnEmitOptions, OnTransformOptions, Require, SuperPluginBuild, SuperPluginSetup } from "../../deps.ts"
 import { contentsToString, isNull, isRecord, promise_all, relativePath } from "../../deps.ts"
+import { ContentStore } from "./content_store.ts"
 import { htmlParse, htmlRender, htmlWalk, type HtmlNode } from "./deps.ts"
-import { default as scriptLinkHandler } from "./node_handlers/script_link.ts"
-import type { HtmlDependencyEmitData, HtmlNodeRef, HtmlNodeReplacementContentTask, NodeHandler } from "./typedefs.ts"
+import { scriptInlineHandler, scriptLinkHandler } from "./node_handlers/mod.ts"
+import type { HtmlDependencyEmitData, HtmlNodeRef, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnContext } from "./typedefs.ts"
 
 
 /** setup configuration options for the {@link htmlPluginSetup}.
@@ -33,6 +34,7 @@ export const defaultHtmlPluginSetupConfig: Required<HtmlPluginSetupConfig> = {
 	transformFilter: { filter: /.*/, loader: "html", namespace: undefined },
 	nodeHandlers: [
 		scriptLinkHandler,
+		scriptInlineHandler,
 	],
 }
 
@@ -44,7 +46,9 @@ export const htmlPluginSetup = (config?: HtmlPluginSetupConfig): SuperPluginSetu
 const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupConfig): ReturnType<SuperPluginSetup> => {
 	const
 		{ transformFilter, nodeHandlers } = { ...defaultHtmlPluginSetupConfig, ...config },
-		emitFilter: OnEmitOptions = { filter: /.*/, inputs: [transformFilter] }
+		emitFilter: OnEmitOptions = { filter: /.*/, inputs: [transformFilter] },
+		contentStore = new ContentStore(build),
+		replace_content_ctx: ReplaceContentFnContext = { contentStore }
 
 	build.onTransform(transformFilter, async (args) => {
 		const
@@ -67,7 +71,13 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 				if (filter.nodeType !== node.type) { continue }
 				if ((filter.nodeName ?? false) && (filter.nodeName !== node.name)) { continue }
 				if ((filter.nodeAttribute ?? false) && isRecord(node.attributes) && !(filter.nodeAttribute! in node.attributes)) { continue }
-				const result = await callback({ htmlDocument: html_doc, htmlNode: node })
+				const result = await callback({
+					htmlDocument: html_doc,
+					htmlNode: node,
+					htmlPath: importer,
+					htmlNamespace: namespace,
+					contentStore,
+				})
 				if (isNull(result?.path)) { continue }
 
 				let { path, replaceContent, external, with: with_attrs } = result
@@ -137,7 +147,7 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 				? outputPath
 				: relativePath(path, outputPath)
 			// re-inserting the new link/reference back into the html node.
-			await replaceContent(node, referenced_path, { external, write, with: with_attrs })
+			await replaceContent(replace_content_ctx, node, referenced_path, { external, write, with: with_attrs })
 		}))
 
 		const rendered_html = await htmlRender(htmlDocument)
