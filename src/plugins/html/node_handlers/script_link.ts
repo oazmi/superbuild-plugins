@@ -1,12 +1,12 @@
 /** @module */
 
-import type { HtmlDependency, HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler } from "../typedefs.ts"
+import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler, ReplaceContentFn } from "../typedefs.ts"
 import { HTML_NODE_TYPE } from "./../deps.ts"
 
 
 export const scriptLinkHandlerFilter: HtmlDependencyFilter = { nodeType: HTML_NODE_TYPE.ELEMENT, nodeName: "script", nodeAttribute: "src" }
 
-export const scriptLinkHandlerCallback: HtmlDependencyCallback = (args: HtmlDependencyArgs) => {
+export const scriptLinkHandlerCallback: HtmlDependencyCallback = (args, ctx) => {
 	const src_path: string = args.htmlNode.attributes["src"]
 	return {
 		path: src_path,
@@ -15,7 +15,10 @@ export const scriptLinkHandlerCallback: HtmlDependencyCallback = (args: HtmlDepe
 	}
 }
 
-const replaceContent: HtmlDependency["replaceContent"] = (ctx, node, output_path, config) => {
+const replaceContent: ReplaceContentFn = (args, ctx) => {
+	const
+		node = args.htmlNode,
+		output_path = args.relativePath ?? args.outputPath
 	node.attributes["src"] = output_path
 }
 

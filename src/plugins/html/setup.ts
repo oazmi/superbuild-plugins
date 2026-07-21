@@ -8,7 +8,7 @@ import { contentsToString, isNull, isRecord, promise_all, relativePath } from ".
 import { ContentStore } from "./content_store.ts"
 import { htmlParse, htmlRender, htmlWalk, type HtmlNode } from "./deps.ts"
 import { scriptInlineHandler, scriptLinkHandler } from "./node_handlers/mod.ts"
-import type { HtmlDependencyEmitData, HtmlNodeRef, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnContext } from "./typedefs.ts"
+import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyEmitData, HtmlNodeRef, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnArgs, ReplaceContentFnContext } from "./typedefs.ts"
 
 
 /** setup configuration options for the {@link htmlPluginSetup}.
@@ -48,7 +48,7 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 		{ transformFilter, nodeHandlers } = { ...defaultHtmlPluginSetupConfig, ...config },
 		emitFilter: OnEmitOptions = { filter: /.*/, inputs: [transformFilter] },
 		contentStore = new ContentStore(build),
-		replace_content_ctx: ReplaceContentFnContext = { contentStore }
+		callback_ctx: Parameters<HtmlDependencyCallback>[1] = { build, contentStore }
 
 	build.onTransform(transformFilter, async (args) => {
 		const
@@ -71,18 +71,18 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 				if (filter.nodeType !== node.type) { continue }
 				if ((filter.nodeName ?? false) && (filter.nodeName !== node.name)) { continue }
 				if ((filter.nodeAttribute ?? false) && isRecord(node.attributes) && !(filter.nodeAttribute! in node.attributes)) { continue }
-				const result = await callback({
+				const args: HtmlDependencyArgs = {
 					htmlDocument: html_doc,
 					htmlNode: node,
 					htmlPath: importer,
 					htmlNamespace: namespace,
-					contentStore,
-				})
+				}
+				const result = await callback(args, callback_ctx)
 				if (isNull(result?.path)) { continue }
 
-				let { path, replaceContent, external, with: with_attrs } = result
+				let { path, replaceContent, external, with: with_attrs, handlerData } = result
 				const
-					reinsertion_task: HtmlNodeReplacementContentTask = { htmlNode: node, replaceContent },
+					reinsertion_task: HtmlNodeReplacementContentTask = { originalArgs: args, replaceContent, handlerData },
 					key = resource_reinsertion_list.push(reinsertion_task) - 1
 				if (!external) {
 					const resolved = await build.resolve(path, {
@@ -114,14 +114,23 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 		}
 	})
 
-	build.onEmit(emitFilter, async (args) => {
+	// build.onEmit({ filter: /.*/, importedBy: [emitFilter] }, async (args) => {
+	// 	const new_args = await build.rerouteImports(args, "js", "../nyaa.htmlzz")
+	// 	console.log("old", args.outputPath)
+	// 	console.log(new TextDecoder().decode(args.contents))
+	// 	console.log("new", new_args.path)
+	// 	console.log(new TextDecoder().decode(new_args.contents))
+	// })
+
+	build.onEmit(emitFilter, async (args, output_file_registry) => {
 		const
+			replace_content_ctx: ReplaceContentFnContext = { ...callback_ctx, outputs: output_file_registry },
 			errors: EsbuildPartialMessage[] = [],
 			number_of_sources = args.inputs.length,
-			path = args.outputPath
+			htmlOutputPath = args.outputPath
 		if (number_of_sources !== 1) {
 			errors.push({
-				location: { file: path },
+				location: { file: htmlOutputPath },
 				text: `[htmlPlugin]: expected output html file to be constituted of just a single input html file, `
 					+ `but found it to be made out of "${number_of_sources}" source files.`
 					+ `input sources: [${args.inputs.map((input_file) => (input_file.namespace + ":" + input_file.path)).join("\n")}]`
@@ -131,23 +140,32 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 		const { htmlDocument, replacementTaskList } = args.inputs[0].emitData as HtmlDependencyEmitData
 
 		await promise_all(args.imports.map(async (imported_entity): Promise<void> => {
+			console.log(imported_entity)
 			const
-				{ key: node_ref, outputPath, external, write, with: with_attrs } = imported_entity as ImportedEntity<HtmlNodeRef>,
+				{ key: node_ref, outputPath, external } = imported_entity as ImportedEntity<HtmlNodeRef>,
 				reinsertion_task = replacementTaskList.at(node_ref)
 			if (isNull(reinsertion_task)) {
 				errors.push({
-					location: { file: path },
+					location: { file: htmlOutputPath },
 					text: `[htmlPlugin]: failed to find the "insertImport" function associated with the following html node number: "${node_ref}".`,
 				})
 				return
 			}
-			const { htmlNode: node, replaceContent } = replacementTaskList[node_ref]
-			// now we resolve the `outputPath` as relative path if it is not an external path.
-			const referenced_path = external
-				? outputPath
-				: relativePath(path, outputPath)
+
+			const
+				{ originalArgs, replaceContent, handlerData } = reinsertion_task,
+				// now we resolve the `outputPath` as relative path if it is not an external path.
+				relative_path = external ? undefined : relativePath(htmlOutputPath, outputPath),
+				replace_content_args: ReplaceContentFnArgs = {
+					...originalArgs,
+					...imported_entity,
+					htmlOutputPath,
+					relativePath: relative_path,
+					handlerData,
+				}
+
 			// re-inserting the new link/reference back into the html node.
-			await replaceContent(replace_content_ctx, node, referenced_path, { external, write, with: with_attrs })
+			await replaceContent(replace_content_args, replace_content_ctx)
 		}))
 
 		const rendered_html = await htmlRender(htmlDocument)

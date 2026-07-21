@@ -20,6 +20,8 @@ type FileId = number & {}
 interface ContentStoreFile extends ContentStoreAddFile {
 	/** the resource's unique id number. */
 	id: FileId
+
+	/** the contents of the resource. */
 	contents: Uint8Array<ArrayBuffer>
 }
 
@@ -88,11 +90,14 @@ export class ContentStore {
 
 		// TODO: `build.onResolve` for dependencies of virtual resources that live under the `namespace`.
 		// don't forget to re-introduce the original namespace to them.
+		const ALREADY_ENCOUNTERED = Symbol()
 
 		build.onEmit({
 			filter: /.*/,
 			inputs: [{ filter: /.*/, namespace }],
 		}, (args) => {
+			if (args.reEmitData?.[ALREADY_ENCOUNTERED] === true) { return }
+
 			const
 				errors: EsbuildPartialMessage[] = [],
 				{ outputPath, contents, inputs } = args,
@@ -108,10 +113,12 @@ export class ContentStore {
 			}
 
 			const
+				reEmitData = args.reEmitData ?? {},
 				{ path: resolved_path, loader } = args.inputs[0],
 				id = self.decodeResolvedPath(resolved_path)
 			self.outputFiles.set(id, { id, importerPath: resolved_path, loader, contents })
-			return { write: false } // TODO: super problematic.
+			reEmitData[ALREADY_ENCOUNTERED] = true
+			return { write: false, reEmit: true, reEmitData } // TODO: super problematic.
 			// unfortunately, inlining is not possible for js and css, because that would break relative file references/imports.
 			// for these kinds of files, I'll need to insert a link to the emitted file. and hence write cannot be disabled for them.
 			// but for non-importing resources, such as svgs, we may inline them, and disable writing.

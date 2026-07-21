@@ -12,7 +12,7 @@ export { promiseOutside, promiseTimeout } from "@oazmi/kitchensink/promiseman"
 export { escapeLiteralStringForRegex } from "@oazmi/kitchensink/stringman"
 export { isArray, isFunction, isNull, isRecord, isString } from "@oazmi/kitchensink/struct"
 export type { AutoSuggestOrString, MaybePromise, MaybePromiseLike, Optional, Require } from "@oazmi/kitchensink/typedefs"
-export type { ImportedEntity, ImportEntity, OnEmitOptions, OnEmitResult, OnLoadResult, OnResolveArgs, OnTransformOptions, OnTransformResult, SuperPlugin, SuperPluginBuild, SuperPluginSetup, SuperPluginType } from "@oazmi/superbuild"
+export type { ImportedEntity, ImportEntity, OnEmitArgs, OnEmitOptions, OnEmitResult, OnLoadResult, OnResolveArgs, OnResolveResult, OnTransformOptions, OnTransformResult, ReducedMetafile, SuperPlugin, SuperPluginBuild, SuperPluginSetup, SuperPluginType } from "@oazmi/superbuild"
 export type { EsbuildPartialMessage } from "@oazmi/superbuild/esbuild/strongtypes"
 
 /** flags used for minifying (or eliminating) debugging logs and asserts, when an intelligent bundler, such as `esbuild`, is used. */
