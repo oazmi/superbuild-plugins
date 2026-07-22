@@ -1,6 +1,6 @@
 /** @module */
 
-import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler, ReplaceContentFn } from "../typedefs.ts"
+import type { HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler, ReplaceContentFn } from "../typedefs.ts"
 import { HTML_NODE_TYPE } from "./../deps.ts"
 
 

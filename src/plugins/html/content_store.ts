@@ -88,41 +88,45 @@ export class ContentStore {
 			return { contents, loader, resolveDir, pluginData: args.pluginData }
 		})
 
-		// TODO: `build.onResolve` for dependencies of virtual resources that live under the `namespace`.
-		// don't forget to re-introduce the original namespace to them.
+		// here we "revert" any captured virtual resource's imports to return back to their expected regular namespace (or lack thereof).
+		build.onResolve({ filter: /.*/, namespace: namespace }, (args) => {
+			const
+				{ path, importer, namespace: _namespace, ...rest_args } = args,
+				{ importerPath: original_importer, importerNamespace: original_importer_namespace } = self.getInput(importer)
+			return build.resolve(path, { ...rest_args, importer: original_importer, namespace: original_importer_namespace })
+		})
+
 		const ALREADY_ENCOUNTERED = Symbol()
 
 		build.onEmit({
 			filter: /.*/,
 			inputs: [{ filter: /.*/, namespace }],
-		}, (args) => {
+		}, (args, output_file_registry) => {
 			if (args.reEmitData?.[ALREADY_ENCOUNTERED] === true) { return }
 
 			const
 				errors: EsbuildPartialMessage[] = [],
 				{ outputPath, contents, inputs } = args,
-				number_of_sources = inputs.length
-			if (number_of_sources !== 1) {
+				sources_from_namespace = inputs.filter((input) => { return input.namespace === namespace }),
+				number_of_sources_from_namespace = sources_from_namespace.length
+			// note: one drawback related to strictly expecting just a single virtual file input source is that virtual files won't be able to import other virtual files!
+			if (number_of_sources_from_namespace !== 1) {
 				errors.push({
 					location: { file: outputPath },
-					text: `[ContentStore]: expected output virtual file to be constituted of just a single input file, `
-						+ `but found it to be made out of "${number_of_sources}" source files.`
-						+ `input sources: [${args.inputs.map((input_file) => (input_file.namespace + ":" + input_file.path)).join("\n")}]`
+					text: `[ContentStore]: expected output virtual file to be constituted of just a single primary input file, `
+						+ `but found it to be made out of "${number_of_sources_from_namespace}" primary source files.`
+						+ `input sources: [${sources_from_namespace.map((input_file) => (input_file.namespace + ":" + input_file.path)).join("\n")}]`
 				})
 				return { errors }
 			}
 
 			const
 				reEmitData = args.reEmitData ?? {},
-				{ path: resolved_path, loader } = args.inputs[0],
+				{ path: resolved_path, loader } = sources_from_namespace[0],
 				id = self.decodeResolvedPath(resolved_path)
 			self.outputFiles.set(id, { id, importerPath: resolved_path, loader, contents })
 			reEmitData[ALREADY_ENCOUNTERED] = true
-			return { write: false, reEmit: true, reEmitData } // TODO: super problematic.
-			// unfortunately, inlining is not possible for js and css, because that would break relative file references/imports.
-			// for these kinds of files, I'll need to insert a link to the emitted file. and hence write cannot be disabled for them.
-			// but for non-importing resources, such as svgs, we may inline them, and disable writing.
-			// I'll need to introduce a way where the resource declarator declares whether a file is to be written or not before hand.
+			return { write: false, reEmit: true, reEmitData }
 		})
 	}
 

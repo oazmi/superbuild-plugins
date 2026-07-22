@@ -7,10 +7,6 @@ import { HTML_NODE_TYPE, type HtmlNode } from "./../deps.ts"
 
 export const scriptInlineHandlerFilter: HtmlDependencyFilter = { nodeType: HTML_NODE_TYPE.ELEMENT, nodeName: "script" }
 
-interface HandlerData {
-	virtualSourcePath: string
-}
-
 export const scriptInlineHandlerCallback: HtmlDependencyCallback = (args, ctx) => {
 	if ("src" in (args.htmlNode.attributes ?? {})) { return }
 	const
@@ -28,27 +24,22 @@ export const scriptInlineHandlerCallback: HtmlDependencyCallback = (args, ctx) =
 		contents: js_string,
 	})
 
-	const handlerData: HandlerData = { virtualSourcePath: virtual_src_path }
-
 	return {
-		// TODO: add arbitrary `handlerData` field for the `replaceContent` function to receive. this would be a much better generalization.
 		path: virtual_src_path,
 		external: false,
-		handlerData,
 		replaceContent,
 	}
 }
 
 const replaceContent: ReplaceContentFn = async (args, ctx) => {
 	const
-		{ contentStore, build, outputs } = ctx,
-		{ htmlNode: node, handlerData, outputPath, initialPath, htmlOutputPath } = args,
+		{ build, outputs } = ctx,
+		{ htmlNode: node, outputPath, initialPath, htmlOutputPath } = args,
 		file_entity = outputs.getFile(initialPath ?? outputPath)
 	if (isNull(file_entity)) {
-		throw new Error(
-			`[scriptInline:replaceContent]: expected to find the output entity: "${outputPath}", `
+		const error_text = `[scriptInline:replaceContent]: expected to find the output entity: "${outputPath}", `
 			+ `but couldn't locate it using the key: "${initialPath ?? outputPath}"`
-		)
+		return { errors: [{ text: error_text, location: { file: args.htmlPath, namespace: args.htmlNamespace } }] }
 	}
 	const
 		// the js script's text contents are stored as a child text node.
@@ -58,9 +49,8 @@ const replaceContent: ReplaceContentFn = async (args, ctx) => {
 	// we finally re-route all local/bundled import statements to be relative to the host html file,
 	// rather than the current `initialPath ?? outputPath` path (which would be in the distribution directory for js-content).
 	const { contents: migrated_contents, errors, warnings } = await build.rerouteImports(file_entity.toOnEmitArgs(), "js", htmlOutputPath)
-
-	// console.log(errors, warnings)
 	script_text_content.value = contentsToString(migrated_contents!)
+	return { warnings, errors }
 }
 
 export default {

@@ -114,17 +114,10 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 		}
 	})
 
-	// build.onEmit({ filter: /.*/, importedBy: [emitFilter] }, async (args) => {
-	// 	const new_args = await build.rerouteImports(args, "js", "../nyaa.htmlzz")
-	// 	console.log("old", args.outputPath)
-	// 	console.log(new TextDecoder().decode(args.contents))
-	// 	console.log("new", new_args.path)
-	// 	console.log(new TextDecoder().decode(new_args.contents))
-	// })
-
 	build.onEmit(emitFilter, async (args, output_file_registry) => {
 		const
 			replace_content_ctx: ReplaceContentFnContext = { ...callback_ctx, outputs: output_file_registry },
+			warnings: EsbuildPartialMessage[] = [],
 			errors: EsbuildPartialMessage[] = [],
 			number_of_sources = args.inputs.length,
 			htmlOutputPath = args.outputPath
@@ -165,10 +158,15 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 				}
 
 			// re-inserting the new link/reference back into the html node.
-			await replaceContent(replace_content_args, replace_content_ctx)
+			const {
+				warnings: local_warnings = [],
+				errors: local_errors = [],
+			} = await replaceContent(replace_content_args, replace_content_ctx) ?? {}
+			warnings.push(...local_warnings)
+			errors.push(...local_errors)
 		}))
 
 		const rendered_html = await htmlRender(htmlDocument)
-		return { contents: rendered_html, errors }
+		return { contents: rendered_html, warnings, errors }
 	})
 }

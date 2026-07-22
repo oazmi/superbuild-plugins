@@ -1,6 +1,7 @@
 /** @module */
 
 import type { ImportedEntity, ImportEntity, MaybePromise, MaybePromiseOrNull, OnResolveResult, ReducedMetafile, SuperPluginBuild } from "../../deps.ts"
+import type { EsbuildWarningsAndErrors } from "../../typedefs.ts"
 import type { ContentStore } from "./content_store.ts"
 import type { HTML_NODE_TYPE, HtmlNode, StrictOmit } from "./deps.ts"
 
@@ -66,7 +67,7 @@ export interface ReplaceContentFnArgs extends HtmlDependencyArgs, ImportedEntity
 export type ReplaceContentFn = (
 	args: ReplaceContentFnArgs,
 	ctx: ReplaceContentFnContext,
-) => MaybePromise<void>
+) => MaybePromise<void | undefined | EsbuildWarningsAndErrors>
 
 /** describes a task for replacing the contents of a node with the updated resource output path reference. */
 export interface HtmlNodeReplacementContentTask {
