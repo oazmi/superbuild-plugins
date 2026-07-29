@@ -7,7 +7,7 @@ import type { EsbuildPartialMessage, EsbuildResolveOptions, ImportedEntity, Impo
 import { contentsToString, isNull, isRecord, promise_all, relativePath } from "../../deps.ts"
 import { ContentStore } from "./content_store.ts"
 import { htmlParse, htmlRender, htmlWalk, type HtmlNode } from "./deps.ts"
-import { scriptInlineHandler, scriptLinkHandler } from "./node_handlers/mod.ts"
+import { scriptInlineHandler, scriptLinkHandler, styleInlineHandler, styleLinkHandler } from "./node_handlers/mod.ts"
 import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyEmitData, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnArgs, ReplaceContentFnContext } from "./typedefs.ts"
 
 
@@ -35,6 +35,8 @@ export const defaultHtmlPluginSetupConfig: Required<HtmlPluginSetupConfig> = {
 	nodeHandlers: [
 		scriptLinkHandler,
 		scriptInlineHandler,
+		styleLinkHandler,
+		styleInlineHandler,
 	],
 }
 
@@ -115,7 +117,6 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 		const { htmlDocument } = args.inputs[0].emitData as HtmlDependencyEmitData
 
 		await promise_all(args.imports.map(async (imported_entity): Promise<void> => {
-			console.log(imported_entity)
 			const
 				{ key: reinsertion_task, outputPath, external } = imported_entity as ImportedEntity<HtmlNodeReplacementContentTask>,
 				{ originalArgs, replaceContent, handlerData } = reinsertion_task,
