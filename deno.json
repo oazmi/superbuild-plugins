@@ -18,6 +18,8 @@
 	],
 	"exports": {
 		".": "./src/mod.ts",
+		"./plugins/css": "./src/plugins/css/mod.ts",
+		"./plugins/css/setup": "./src/plugins/css/setup.ts",
 		"./plugins/html": "./src/plugins/html/mod.ts",
 		"./plugins/html/setup": "./src/plugins/html/setup.ts",
 		"./plugins/html/typedefs": "./src/plugins/html/typedefs.ts",

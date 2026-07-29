@@ -12,8 +12,9 @@ export { promiseOutside, promiseTimeout } from "@oazmi/kitchensink/promiseman"
 export { escapeLiteralStringForRegex } from "@oazmi/kitchensink/stringman"
 export { isArray, isFunction, isNull, isRecord, isString } from "@oazmi/kitchensink/struct"
 export type { AutoSuggestOrString, MaybePromise, MaybePromiseLike, Optional, Require } from "@oazmi/kitchensink/typedefs"
-export type { ImportedEntity, ImportEntity, OnEmitArgs, OnEmitOptions, OnEmitResult, OnLoadResult, OnResolveArgs, OnResolveResult, OnTransformOptions, OnTransformResult, ReducedMetafile, SuperPlugin, SuperPluginBuild, SuperPluginSetup, SuperPluginType } from "@oazmi/superbuild"
-export type { EsbuildPartialMessage, EsbuildResolveOptions } from "@oazmi/superbuild/esbuild/strongtypes"
+export { INNER_PLUGIN_BUILD } from "@oazmi/superbuild"
+export type { ImportedEntity, ImportEntity, OnEmitArgs, OnEmitOptions, OnEmitResult, OnLoadResult, OnResolveArgs, OnResolveResult, OnTransformArgs, OnTransformOptions, OnTransformResult, ReducedMetafile, SuperPlugin, SuperPluginBuild, SuperPluginSetup, SuperPluginType } from "@oazmi/superbuild"
+export type { EsbuildPartialMessage, EsbuildPlugin, EsbuildPluginBuild, EsbuildResolveOptions } from "@oazmi/superbuild/esbuild/strongtypes"
 
 /** flags used for minifying (or eliminating) debugging logs and asserts, when an intelligent bundler, such as `esbuild`, is used. */
 export const enum DEBUG {
