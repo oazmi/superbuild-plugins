@@ -3,12 +3,12 @@
  * @module
 */
 
-import type { EsbuildPartialMessage, ImportedEntity, ImportEntity, OnEmitOptions, OnTransformOptions, Require, SuperPluginBuild, SuperPluginSetup } from "../../deps.ts"
+import type { EsbuildPartialMessage, EsbuildResolveOptions, ImportedEntity, ImportEntity, OnEmitOptions, OnTransformOptions, Require, SuperPluginBuild, SuperPluginSetup } from "../../deps.ts"
 import { contentsToString, isNull, isRecord, promise_all, relativePath } from "../../deps.ts"
 import { ContentStore } from "./content_store.ts"
 import { htmlParse, htmlRender, htmlWalk, type HtmlNode } from "./deps.ts"
 import { scriptInlineHandler, scriptLinkHandler } from "./node_handlers/mod.ts"
-import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyEmitData, HtmlNodeRef, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnArgs, ReplaceContentFnContext } from "./typedefs.ts"
+import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyEmitData, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnArgs, ReplaceContentFnContext } from "./typedefs.ts"
 
 
 /** setup configuration options for the {@link htmlPluginSetup}.
@@ -55,16 +55,11 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 			{ path: importer, namespace, resolveDir, pluginData } = args,
 			contents = contentsToString(args.contents),
 			html_doc: HtmlNode = htmlParse(contents),
-			html_imports: Array<ImportEntity<HtmlNodeRef>> = [],
+			html_imports: Array<ImportEntity<HtmlNodeReplacementContentTask>> = [],
 			warnings: EsbuildPartialMessage[] = [],
 			errors: EsbuildPartialMessage[] = []
 
-		const
-			resource_reinsertion_list: HtmlDependencyEmitData["replacementTaskList"] = [],
-			emit_data: HtmlDependencyEmitData = {
-				htmlDocument: html_doc,
-				replacementTaskList: resource_reinsertion_list,
-			}
+		const emit_data: HtmlDependencyEmitData = { htmlDocument: html_doc }
 
 		await htmlWalk(html_doc, async (node) => {
 			for (const { filter, callback } of nodeHandlers) {
@@ -80,26 +75,13 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 				const result = await callback(args, callback_ctx)
 				if (isNull(result?.path)) { continue }
 
-				let { path, replaceContent, external, with: with_attrs, handlerData } = result
 				const
-					reinsertion_task: HtmlNodeReplacementContentTask = { originalArgs: args, replaceContent, handlerData },
-					key = resource_reinsertion_list.push(reinsertion_task) - 1
-				if (!external) {
-					const resolved = await build.resolve(path, {
-						importer,
-						namespace,
-						kind: "import-statement",
-						pluginData,
-						resolveDir,
-					})
-					// TODO: if the resolved path is an empty string/undefined, should we `continue` to the next hook?
-					// though, the result isn't going to change really if the next hook also extracts the same exact `path`...
-					warnings.push(...resolved.warnings)
-					errors.push(...resolved.errors)
-					path = resolved.path
-					external = resolved.external
-				}
-				html_imports.push({ key, path, external, with: with_attrs })
+					{ path, replaceContent, handlerData, ...resolution_args } = result,
+					reinsertion_task: HtmlNodeReplacementContentTask = { originalArgs: args, replaceContent, handlerData }
+				type ValidResolutionArgs = (EsbuildResolveOptions extends typeof resolution_args ? true : false)
+				// asserting that `resolution_args` strictly contains valid esbuild resolve args.
+				const resolution_args_are_valid: ValidResolutionArgs = true
+				html_imports.push({ key: reinsertion_task, path, ...resolution_args })
 				break
 			}
 		})
@@ -130,22 +112,12 @@ const htmlPluginSetupBase = (build: SuperPluginBuild, config?: HtmlPluginSetupCo
 			})
 			return { errors }
 		}
-		const { htmlDocument, replacementTaskList } = args.inputs[0].emitData as HtmlDependencyEmitData
+		const { htmlDocument } = args.inputs[0].emitData as HtmlDependencyEmitData
 
 		await promise_all(args.imports.map(async (imported_entity): Promise<void> => {
 			console.log(imported_entity)
 			const
-				{ key: node_ref, outputPath, external } = imported_entity as ImportedEntity<HtmlNodeRef>,
-				reinsertion_task = replacementTaskList.at(node_ref)
-			if (isNull(reinsertion_task)) {
-				errors.push({
-					location: { file: htmlOutputPath },
-					text: `[htmlPlugin]: failed to find the "insertImport" function associated with the following html node number: "${node_ref}".`,
-				})
-				return
-			}
-
-			const
+				{ key: reinsertion_task, outputPath, external } = imported_entity as ImportedEntity<HtmlNodeReplacementContentTask>,
 				{ originalArgs, replaceContent, handlerData } = reinsertion_task,
 				// now we resolve the `outputPath` as relative path if it is not an external path.
 				relative_path = external ? undefined : relativePath(htmlOutputPath, outputPath),

@@ -6,9 +6,6 @@ import type { ContentStore } from "./content_store.ts"
 import type { HTML_NODE_TYPE, HtmlNode, StrictOmit } from "./deps.ts"
 
 
-/** a reference key to use in superbuild's {@link ImportEntity}, to refer back to the original html node and the import insertion function. */
-export type HtmlNodeRef = number & {}
-
 export interface ReplaceContentFnContext {
 	/** the plugin-build object. do not use it for creating any new hooks.
 	 * it should only be used for its {@link SuperPluginBuild.resolvePath} and {@link SuperPluginBuild.rerouteImports} methods.
@@ -34,7 +31,7 @@ export interface ReplaceContentFnContext {
  * - `write`: specifies if this dependency resource was declared to be written onto the disk.
  * - `handlerData`: read {@link handlerData}.
 */
-export interface ReplaceContentFnArgs extends HtmlDependencyArgs, ImportedEntity {
+export interface ReplaceContentFnArgs extends HtmlDependencyArgs, StrictOmit<ImportedEntity<HtmlNodeReplacementContentTask>, "key"> {
 	/** the finalized absolute output path of the emitted host html file. */
 	htmlOutputPath: string
 
@@ -88,25 +85,17 @@ export interface HtmlNodeReplacementContentTask {
 
 /** a generic dependency of an html file. */
 export interface HtmlDependency extends
-	ImportEntity<HtmlNodeRef>,
+	ImportEntity<HtmlNodeReplacementContentTask>,
 	HtmlNodeReplacementContentTask { }
 
 /** the data passed from the transformation-stage to the emission-stage via the `emitData` return field. */
 export interface HtmlDependencyEmitData {
 	/** the AST of the html document that was processed in the `onTransform` hook. */
 	htmlDocument: HtmlNode
-
-	/** an array of all the content-replacement/path-substitution nodes and functions that will need to take place,
-	 * after the initial bundle has been emitted (i.e. when in the `onEmit` stage).
-	 *
-	 * the index of each element reflects its {@link HtmlNodeRef} number,
-	 * which gets passed over to superbuild's {@link ImportEntity.key} (since it has to be json serializable).
-	*/
-	replacementTaskList: Array<HtmlNodeReplacementContentTask>
 }
 
 /** the html node data passed to each registered node handler. */
-export interface HtmlDependencyArgs extends Pick<HtmlDependencyEmitData, "htmlDocument"> {
+export interface HtmlDependencyArgs extends HtmlDependencyEmitData {
 	/** the `ultrahtml` node associated with this dependency. */
 	htmlNode: HtmlNode
 
