@@ -12,7 +12,6 @@ export { promiseOutside, promiseTimeout } from "@oazmi/kitchensink/promiseman"
 export { escapeLiteralStringForRegex } from "@oazmi/kitchensink/stringman"
 export { isArray, isFunction, isNull, isRecord, isString } from "@oazmi/kitchensink/struct"
 export type { AutoSuggestOrString, MaybePromise, MaybePromiseLike, Optional, Require } from "@oazmi/kitchensink/typedefs"
-export { INNER_PLUGIN_BUILD } from "@oazmi/superbuild"
 export type { ImportedEntity, ImportEntity, OnEmitArgs, OnEmitOptions, OnEmitResult, OnLoadResult, OnResolveArgs, OnResolveResult, OnTransformArgs, OnTransformOptions, OnTransformResult, ReducedMetafile, SuperPlugin, SuperPluginBuild, SuperPluginSetup, SuperPluginType } from "@oazmi/superbuild"
 export type { EsbuildPartialMessage, EsbuildPlugin, EsbuildPluginBuild, EsbuildResolveOptions } from "@oazmi/superbuild/esbuild/strongtypes"
 

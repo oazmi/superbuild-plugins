@@ -7,7 +7,7 @@ import type { EsbuildPartialMessage, EsbuildResolveOptions, ImportedEntity, Impo
 import { contentsToString, isNull, isRecord, promise_all, relativePath } from "../../deps.ts"
 import { ContentStore } from "./content_store.ts"
 import { htmlParse, htmlRender, htmlWalk, type HtmlNode } from "./deps.ts"
-import { pageLinkHandler, scriptInlineHandler, scriptLinkHandler, styleInlineHandler, styleLinkHandler } from "./node_handlers/mod.ts"
+import { allMediaLinkHandlers, pageLinkHandler, scriptInlineHandler, scriptLinkHandler, styleInlineHandler, styleLinkHandler } from "./node_handlers/mod.ts"
 import type { HtmlDependencyArgs, HtmlDependencyCallback, HtmlDependencyEmitData, HtmlNodeReplacementContentTask, NodeHandler, ReplaceContentFnArgs, ReplaceContentFnContext } from "./typedefs.ts"
 
 
@@ -33,6 +33,7 @@ export interface HtmlPluginSetupConfig {
 export const defaultHtmlPluginSetupConfig: Required<HtmlPluginSetupConfig> = {
 	transformFilter: { filter: /.*/, loader: "html", namespace: undefined },
 	nodeHandlers: [
+		...allMediaLinkHandlers,
 		pageLinkHandler,
 		scriptLinkHandler,
 		scriptInlineHandler,

@@ -4,7 +4,6 @@
 */
 
 import type { EsbuildPlugin, EsbuildPluginBuild, ImportedEntity, ImportEntity, OnEmitOptions, OnTransformArgs, OnTransformOptions, Require, SuperPluginBuild, SuperPluginSetup } from "../../deps.ts"
-import { INNER_PLUGIN_BUILD } from "../../deps.ts"
 import type { EsbuildWarningsAndErrors } from "../../typedefs.ts"
 
 
@@ -103,6 +102,7 @@ const extractCssDeps = async (
 	> & { loader: "css" | "local-css" },
 ): Promise<ExtractCssDepsResult> => {
 	const
+		sbuild = build as SuperPluginBuild, // just for helping with type annotation.
 		{ absWorkingDir, nodePaths, alias } = build.initialOptions,
 		{ path, contents, loader, resolveDir } = args,
 		all_imports: Array<CssDependency> = [],
@@ -110,9 +110,7 @@ const extractCssDeps = async (
 			name: "does-not-matter",
 			setup: extractCssDepsPluginSetupFactory.bind(undefined, all_imports),
 		}
-	const base_esbuild = INNER_PLUGIN_BUILD in build
-		? build[INNER_PLUGIN_BUILD].esbuild
-		: build.esbuild
+	const base_esbuild = (sbuild.getInnerEsbuildPluginBuild?.() ?? build).esbuild
 	const build_result = await base_esbuild.build({
 		stdin: { contents, loader, resolveDir, sourcefile: path },
 		plugins: [extractCssDepsPlugin],

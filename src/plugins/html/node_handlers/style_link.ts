@@ -18,8 +18,10 @@ export const styleLinkHandlerFilter: HtmlDependencyFilter = { nodeType: HTML_NOD
 
 export const styleLinkHandlerCallback: HtmlDependencyCallback = (args, ctx) => {
 	// first, we ensure that a stylesheet is being linked, and that an href has been provided.
-	const html_node_attrs = args.htmlNode.attributes
-	if (html_node_attrs["rel"].toLowerCase() !== "stylesheet") { return }
+	const
+		html_node_attrs = args.htmlNode.attributes,
+		rel_tokens = (html_node_attrs["rel"] as string).toLowerCase().split(" ")
+	if (!rel_tokens.includes("stylesheet")) { return }
 	if (!isString(html_node_attrs["href"])) { return }
 	const
 		src_path: string = html_node_attrs["href"],
