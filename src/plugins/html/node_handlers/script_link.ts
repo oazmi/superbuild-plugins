@@ -1,16 +1,24 @@
-/** @module */
+/** this node-handler intercepts all `<script src="...">` html nodes,
+ * and bundles the referenced javascript (or typescript) file.
+ * however, if an `external` attribute is present (i.e. `<script external src="...">`),
+ * then the referenced resource will not be resolved nor bundled.
+ *
+ * @module
+*/
 
+import { HTML_NODE_TYPE } from "../deps.ts"
 import type { HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler, ReplaceContentFn } from "../typedefs.ts"
-import { HTML_NODE_TYPE } from "./../deps.ts"
 
 
 export const scriptLinkHandlerFilter: HtmlDependencyFilter = { nodeType: HTML_NODE_TYPE.ELEMENT, nodeName: "script", nodeAttribute: "src" }
 
 export const scriptLinkHandlerCallback: HtmlDependencyCallback = (args, ctx) => {
 	const src_path: string = args.htmlNode.attributes["src"]
+	// if an `external` attribute is present in the node, then we'll not bundle the referenced resource.
+	const is_external = "external" in args.htmlNode.attributes
 	return {
 		path: src_path,
-		external: false,
+		external: is_external,
 		replaceContent,
 	}
 }

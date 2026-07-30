@@ -1,8 +1,16 @@
-/** @module */
+/** this node-handler intercepts all `<style> CSS CONTENT </style>` html nodes,
+ * and bundles the dependencies of the embedded css rules.
+ *
+ * you will generally want to include the {@link cssPlugin} along with the html-plugin,
+ * for proper bundling of dependency css files referenced inside of the style block.
+ *
+ * @module
+*/
 
 import { contentsToString, isNull } from "../../../deps.ts"
+import type { cssPlugin } from "../../css/mod.ts"
+import { HTML_NODE_TYPE, type HtmlNode } from "../deps.ts"
 import type { HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler, ReplaceContentFn } from "../typedefs.ts"
-import { HTML_NODE_TYPE, type HtmlNode } from "./../deps.ts"
 
 
 export const styleInlineHandlerFilter: HtmlDependencyFilter = { nodeType: HTML_NODE_TYPE.ELEMENT, nodeName: "style" }

@@ -1,8 +1,12 @@
-/** @module */
+/** this node-handler intercepts all `<script> TS CONTENT </script>` html nodes,
+ * and bundles the contained typescript code inside of the script tag.
+ *
+ * @module
+*/
 
 import { contentsToString, isNull } from "../../../deps.ts"
+import { HTML_NODE_TYPE, type HtmlNode } from "../deps.ts"
 import type { HtmlDependencyCallback, HtmlDependencyFilter, NodeHandler, ReplaceContentFn } from "../typedefs.ts"
-import { HTML_NODE_TYPE, type HtmlNode } from "./../deps.ts"
 
 
 export const scriptInlineHandlerFilter: HtmlDependencyFilter = { nodeType: HTML_NODE_TYPE.ELEMENT, nodeName: "script" }
