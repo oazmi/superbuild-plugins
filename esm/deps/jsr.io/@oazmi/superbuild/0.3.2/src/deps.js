@@ -1,0 +1,36 @@
+import { isString } from "../../../kitchensink/0.10.1/src/struct.js";
+export { array_isEmpty, console_log, date_now, dom_clearTimeout, dom_setTimeout, json_stringify, math_max, number_parseInt, object_assign, object_entries, object_fromEntries, object_keys, promise_all, promise_outside } from "../../../kitchensink/0.10.1/src/alias.js";
+export { bind_array_push } from "../../../kitchensink/0.10.1/src/binder.js";
+export { ensureFile, getRuntimeCwd, identifyCurrentRuntime, statEntry, writeFile } from "../../../kitchensink/0.10.1/src/crossenv.js";
+export { crc32 } from "../../../kitchensink/0.10.1/src/cryptoman.js";
+export { ensureEndSlash, ensureFileUrlIsLocalPath, ensureStartDotSlash, fileUrlToLocalPath, getUriScheme, isAbsolutePath, joinPaths, parseFilepathInfo, pathToPosixPath, relativePath, resolveAsUrl, resolvePathFactory } from "../../../kitchensink/0.10.1/src/pathman.js";
+export { promiseOutside, promiseTimeout } from "../../../kitchensink/0.10.1/src/promiseman.js";
+export { escapeLiteralStringForRegex } from "../../../kitchensink/0.10.1/src/stringman.js";
+export { isArray, isFunction, isNull, isRecord, isString } from "../../../kitchensink/0.10.1/src/struct.js";
+/** flags used for minifying (or eliminating) debugging logs and asserts, when an intelligent bundler, such as `esbuild`, is used. */
+export var DEBUG;
+(function (DEBUG) {
+    DEBUG[DEBUG["LOG"] = 1] = "LOG";
+    DEBUG[DEBUG["ASSERT"] = 1] = "ASSERT";
+    DEBUG[DEBUG["ERROR"] = 1] = "ERROR";
+    DEBUG[DEBUG["PRODUCTION"] = 1] = "PRODUCTION";
+    DEBUG[DEBUG["MINIFY"] = 0] = "MINIFY";
+})(DEBUG || (DEBUG = {}));
+export const noop = (() => undefined);
+export const urlToString = (url) => { return isString(url) ? url : url.href; };
+const 
+// posix directory path separator.
+sep = "/", 
+// posix relative directory path navigator.
+dotslash = "./", 
+// posix relative parent directory path navigator.
+dotdotslash = "../", string_starts_with = (str, starts_with) => str.startsWith(starts_with), string_ends_with = (str, ends_with) => str.endsWith(ends_with);
+export const isRelativePath = (path) => {
+    return string_starts_with(path, dotslash) || string_starts_with(path, dotdotslash);
+};
+export const ensureRelativeDotSlash = (path) => {
+    return isRelativePath(path) ? path
+        : string_starts_with(path, sep) ? "." + path
+            : dotslash + path;
+};
+export const textEncoder = new TextEncoder(), textDecoder = new TextDecoder();

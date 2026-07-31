@@ -1,0 +1,83 @@
+{
+  "name": "@oazmi/superbuild-plugins",
+  "version": "0.1.0",
+  "description": "A suite of plugins for superbuild (which is a wrapper over esbuild) for static site generation with full code-splitting and code-sharing support.",
+  "keywords": [
+    "ssg",
+    "html",
+    "bundler",
+    "superbuild",
+    "esbuild-plugin",
+    "superbuild-plugin",
+    "static-site-generation",
+    "html-bundler",
+    "static-site"
+  ],
+  "author": "Omar Azmi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oazmi/superbuild-plugins.git"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/oazmi/superbuild-plugins/issues"
+  },
+  "module": "./esm/mod.js",
+  "exports": {
+    ".": {
+      "import": "./esm/mod.js"
+    },
+    "./plugins/css": {
+      "import": "./esm/plugins/css/mod.js"
+    },
+    "./plugins/css/setup": {
+      "import": "./esm/plugins/css/setup.js"
+    },
+    "./plugins/html": {
+      "import": "./esm/plugins/html/mod.js"
+    },
+    "./plugins/html/setup": {
+      "import": "./esm/plugins/html/setup.js"
+    },
+    "./plugins/html/typedefs": {
+      "import": "./esm/plugins/html/typedefs.js"
+    },
+    "./plugins/html/node-handlers": {
+      "import": "./esm/plugins/html/node_handlers/mod.js"
+    },
+    "./plugins/importmeta": {
+      "import": "./esm/plugins/importmeta/mod.js"
+    },
+    "./plugins/importmeta/setup": {
+      "import": "./esm/plugins/importmeta/setup.js"
+    },
+    "./funcdefs": {
+      "import": "./esm/funcdefs.js"
+    },
+    "./typedefs": {
+      "import": "./esm/typedefs.js"
+    }
+  },
+  "scripts": {
+    "build-dist": "npm run build-esm && npm run build-esm-minify && npm run build-iife && npm run build-iife-minify",
+    "build-esm": "npx esbuild \"./src/mod.ts\" --bundle --format=esm --external:node:fs/promises --external:node:child_process --outfile=\"./dist/@oazmi/superbuild-plugins.esm.js\"",
+    "build-esm-minify": "npx esbuild \"./src/mod.ts\" --bundle --minify --format=esm --external:node:fs/promises --external:node:child_process --outfile=\"./dist/@oazmi/superbuild-plugins.esm.min.js\"",
+    "build-iife": "npx esbuild \"./src/mod.ts\" --bundle --format=iife --external:node:fs/promises --external:node:child_process --outfile=\"./dist/@oazmi/superbuild-plugins.iife.js\"",
+    "build-iife-minify": "npx esbuild \"./src/mod.ts\" --bundle --minify --format=iife --external:node:fs/promises --external:node:child_process --outfile=\"./dist/@oazmi/superbuild-plugins.iife.min.js\""
+  },
+  "type": "module",
+  "sideEffects": false,
+  "dependencies": {
+    "ultrahtml": "^1.7.0",
+    "@oazmi/superbuild": "0.3.2",
+    "@oazmi/kitchensink": "0.10.1",
+    "@oazmi/esbuild-types": "0.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "typescript": "^5.6.0",
+    "esbuild": "^0.25.0",
+    "typedoc": "^0.28.1"
+  },
+  "_generatedBy": "dnt@dev"
+}

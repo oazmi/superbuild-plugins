@@ -1,0 +1,1 @@
+{"version":3,"file":"mod.d.ts","sourceRoot":"","sources":["../../../src/plugins/importmeta/mod.ts"],"names":[],"mappings":"AAAA;;;EAGE;AAEF,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,eAAe,CAAA;AACpD,OAAO,EAAyB,KAAK,2BAA2B,EAAE,MAAM,YAAY,CAAA;AAGpF,mBAAmB,YAAY,CAAA;AAC/B,OAAO,EAAE,kCAAkC,EAAE,qBAAqB,EAAE,MAAM,YAAY,CAAA;AAEtF,0CAA0C;AAC1C,eAAO,MAAM,gBAAgB,YAAa,2BAA2B,KAAG,eAKvE,CAAA"}

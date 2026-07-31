@@ -1,0 +1,59 @@
+import { isString } from "../../../kitchensink/0.10.1/src/struct.js"
+import type { MaybePromise } from "../../../kitchensink/0.10.1/src/typedefs.js"
+
+
+export type * as esbuild from "../../../esbuild-types/0.28.0/src/mod.js"
+export { array_isEmpty, console_log, date_now, dom_clearTimeout, dom_setTimeout, json_stringify, math_max, number_parseInt, object_assign, object_entries, object_fromEntries, object_keys, promise_all, promise_outside } from "../../../kitchensink/0.10.1/src/alias.js"
+export { bind_array_push } from "../../../kitchensink/0.10.1/src/binder.js"
+export { ensureFile, getRuntimeCwd, identifyCurrentRuntime, statEntry, writeFile } from "../../../kitchensink/0.10.1/src/crossenv.js"
+export { crc32 } from "../../../kitchensink/0.10.1/src/cryptoman.js"
+export { ensureEndSlash, ensureFileUrlIsLocalPath, ensureStartDotSlash, fileUrlToLocalPath, getUriScheme, isAbsolutePath, joinPaths, parseFilepathInfo, pathToPosixPath, relativePath, resolveAsUrl, resolvePathFactory } from "../../../kitchensink/0.10.1/src/pathman.js"
+export { promiseOutside, promiseTimeout } from "../../../kitchensink/0.10.1/src/promiseman.js"
+export { escapeLiteralStringForRegex } from "../../../kitchensink/0.10.1/src/stringman.js"
+export { isArray, isFunction, isNull, isRecord, isString } from "../../../kitchensink/0.10.1/src/struct.js"
+export type { AutoSuggestOrString, MaybePromise, MaybePromiseLike, Optional, Require } from "../../../kitchensink/0.10.1/src/typedefs.js"
+
+/** flags used for minifying (or eliminating) debugging logs and asserts, when an intelligent bundler, such as `esbuild`, is used. */
+export const enum DEBUG {
+	LOG = 1,
+	ASSERT = 1,
+	ERROR = 1,
+	PRODUCTION = 1,
+	MINIFY = 0,
+}
+
+export const noop = (() => undefined)
+
+export const urlToString = (url: string | URL): string => { return isString(url) ? url : url.href }
+
+const
+	// posix directory path separator.
+	sep = "/",
+	// posix relative directory path navigator.
+	dotslash = "./",
+	// posix relative parent directory path navigator.
+	dotdotslash = "../",
+	string_starts_with = (str: string, starts_with: string): boolean => str.startsWith(starts_with),
+	string_ends_with = (str: string, ends_with: string): boolean => str.endsWith(ends_with)
+
+export const isRelativePath = (path: string): boolean => {
+	return string_starts_with(path, dotslash) || string_starts_with(path, dotdotslash)
+}
+
+export const ensureRelativeDotSlash = (path: string): string => {
+	return isRelativePath(path) ? path
+		: string_starts_with(path, sep) ? "." + path
+			: dotslash + path
+}
+
+export const
+	textEncoder = new TextEncoder(),
+	textDecoder = new TextDecoder()
+
+/** represents either a regular value `T`, or nullable value (`null | undefined`), or a `Promise` thereof. */
+export type MaybePromiseOrNull<T> = MaybePromise<T | null | undefined>
+
+/** represents either a regular value `T`, or void value (`null | undefined | void`), or a `Promise` thereof. */
+export type MaybePromiseOrVoid<T> = MaybePromise<T | null | undefined | void>
+
+export type StrictOmit<T, K extends keyof T> = Omit<T, K>
