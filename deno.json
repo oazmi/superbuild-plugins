@@ -24,6 +24,8 @@
 		"./plugins/html/setup": "./src/plugins/html/setup.ts",
 		"./plugins/html/typedefs": "./src/plugins/html/typedefs.ts",
 		"./plugins/html/node-handlers": "./src/plugins/html/node_handlers/mod.ts",
+		"./plugins/importmeta": "./src/plugins/importmeta/mod.ts",
+		"./plugins/importmeta/setup": "./src/plugins/importmeta/setup.ts",
 		"./funcdefs": "./src/funcdefs.ts",
 		"./typedefs": "./src/typedefs.ts"
 	},
